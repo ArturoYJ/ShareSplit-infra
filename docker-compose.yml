@@ -1,0 +1,51 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sharesplit_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sharesplit}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sharesplit_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-sharesplit}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d:ro
+    networks:
+      - sharesplit_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sharesplit} -d ${POSTGRES_DB:-sharesplit}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: sharesplit_backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-3001}:3001"
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URL: postgresql://${POSTGRES_USER:-sharesplit}:${POSTGRES_PASSWORD:-sharesplit_secret}@postgres:5432/${POSTGRES_DB:-sharesplit}
+      JWT_SECRET: ${JWT_SECRET:-change_this_jwt_secret_in_production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - sharesplit_net
+
+volumes:
+  postgres_data:
+    name: sharesplit_postgres_data
+
+networks:
+  sharesplit_net:
+    name: sharesplit_network
+    driver: bridge
