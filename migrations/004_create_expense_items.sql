@@ -13,7 +13,4 @@ CREATE TABLE IF NOT EXISTS expense_items (
     created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW()
 );
 
--- Columna calculada como VIEW para facilitar consultas
--- total_price = unit_price * quantity  (se computa en el SELECT, no se almacena)
-
 CREATE INDEX IF NOT EXISTS idx_expense_items_expense ON expense_items(expense_id);
