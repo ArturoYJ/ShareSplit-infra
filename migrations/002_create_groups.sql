@@ -21,10 +21,12 @@ CREATE TRIGGER groups_updated_at
 
 -- ── Membresías (relación N:M entre usuarios y grupos) ──────────────────────
 
+CREATE TYPE group_role AS ENUM ('owner', 'member');
+
 CREATE TABLE IF NOT EXISTS group_members (
     group_id    UUID        NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
     user_id     UUID        NOT NULL REFERENCES users(id)  ON DELETE CASCADE,
-    role        VARCHAR(20) NOT NULL DEFAULT 'member',   -- 'owner' | 'member'
+    role        group_role  NOT NULL DEFAULT 'member',
     joined_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (group_id, user_id)
 );
