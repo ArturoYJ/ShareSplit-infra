@@ -35,6 +35,10 @@ services:
       JWT_SECRET: ${JWT_SECRET:-change_this_jwt_secret_in_production}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      TRUST_PROXY: ${TRUST_PROXY:-0}
+      RATE_LIMIT_GLOBAL_MAX: ${RATE_LIMIT_GLOBAL_MAX:-800}
+      RATE_LIMIT_AUTH_MAX: ${RATE_LIMIT_AUTH_MAX:-50}
+      RATE_LIMIT_PAYMENTS_MAX: ${RATE_LIMIT_PAYMENTS_MAX:-80}
     depends_on:
       postgres:
         condition: service_healthy

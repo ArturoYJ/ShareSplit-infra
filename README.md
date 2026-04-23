@@ -30,6 +30,21 @@ docker compose up -d --build
 docker compose up -d postgres
 ```
 
+## Check de Calidad (Docker-only)
+
+Ejecuta validaciones en contenedores limpios:
+
+```bash
+docker compose -f docker-compose.check.yml up -d postgres
+docker compose -f docker-compose.check.yml run --rm backend-check
+docker compose -f docker-compose.check.yml run --rm frontend-check
+docker compose -f docker-compose.check.yml down -v
+```
+
+Incluye:
+- `backend-check`: pruebas de integración de API.
+- `frontend-check`: `lint` + `build`.
+
 ## Servicios
 
 | Servicio | Puerto | Descripción |
