@@ -8,7 +8,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sharesplit_secret}
       POSTGRES_DB: ${POSTGRES_DB:-sharesplit}
     ports:
-      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+      # Expuesto para que puedas conectarte desde Render, Vercel o tu entorno local
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./migrations:/docker-entrypoint-initdb.d:ro
@@ -19,60 +20,6 @@ services:
       interval: 10s
       timeout: 2s
       retries: 5
-
-  backend:
-    build:
-      context: ../backend
-      dockerfile: Dockerfile
-    container_name: sharesplit_backend
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/health || exit 1"]
-      interval: 15s
-      timeout: 3s
-      retries: 5
-      start_period: 10s
-    ports:
-      - "${BACKEND_PORT:-3001}:3001"
-    environment:
-      NODE_ENV: ${NODE_ENV:-development}
-      PORT: 3001
-      DATABASE_URL: postgresql://${POSTGRES_USER:-sharesplit}:${POSTGRES_PASSWORD:-sharesplit_secret}@postgres:5432/${POSTGRES_DB:-sharesplit}
-      JWT_SECRET: ${JWT_SECRET:-change_this_jwt_secret_in_production}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
-      TRUST_PROXY: ${TRUST_PROXY:-0}
-      RATE_LIMIT_GLOBAL_MAX: ${RATE_LIMIT_GLOBAL_MAX:-800}
-      RATE_LIMIT_AUTH_MAX: ${RATE_LIMIT_AUTH_MAX:-50}
-      RATE_LIMIT_PAYMENTS_MAX: ${RATE_LIMIT_PAYMENTS_MAX:-80}
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - sharesplit_net
-
-  frontend:
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
-      args:
-        # Baked into the client bundle at build time — must be the URL the browser reaches,
-        # not the Docker-internal hostname. Override via .env for staging/production.
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api}
-    container_name: sharesplit_frontend
-    restart: unless-stopped
-    environment:
-      NODE_ENV: production
-      PORT: 3000
-      # Bind to all interfaces so Docker can forward traffic into the container
-      HOSTNAME: "0.0.0.0"
-    ports:
-      - "${FRONTEND_PORT:-3000}:3000"
-    depends_on:
-      backend:
-        condition: service_healthy
-    networks:
-      - sharesplit_net
 
 volumes:
   postgres_data:
